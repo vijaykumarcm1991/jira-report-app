@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 from requests.auth import HTTPBasicAuth
-from datetime import datetime, time
+from datetime import datetime
 from dateutil import parser as date_parser
 import pytz
 import argparse
@@ -53,56 +53,36 @@ if not args.till_now and not END_DATE:
     raise ValueError("End date is required unless till-now is set")
 
 PAGE_SIZE = 500
-IST = pytz.timezone("Asia/Kolkata")
-UTC = pytz.utc
 
-# Parse dates from UI
-start_date_obj = datetime.strptime(START_DATE, "%Y-%m-%d").date()
-if END_DATE:
-    end_date_obj = datetime.strptime(END_DATE, "%Y-%m-%d").date()
-else:
-    end_date_obj = None
+def build_ist_range(start_date_str, end_date_str, till_now):
+    """
+    start_date_str, end_date_str -> 'YYYY-MM-DD'
+    Returns IST datetime strings usable directly in JQL
+    """
 
-now_ist = datetime.now(IST)
+    # Start date always begins at 00:00
+    start_dt = f"{start_date_str} 00:00"
 
-# Start = start date 00:00 IST
-start_dt_ist = IST.localize(datetime.combine(start_date_obj, time.min))
-start_dt_utc = start_dt_ist.astimezone(UTC)
+    if till_now:
+        # Explicit user intent: till now
+        end_dt = datetime.now().strftime("%Y-%m-%d %H:%M")
+    else:
+        # Explicit end date always means full day
+        end_dt = f"{end_date_str} 23:59"
 
-# 🔴 FINAL END-DATE DECISION LOGIC (STEP 6)
-if args.till_now:
-    # ✅ Explicit user intent: Till now
-    end_dt_ist = now_ist
+    return start_dt, end_dt
 
-elif end_date_obj == now_ist.date():
-    # ✅ End date is today → till now
-    end_dt_ist = now_ist
-
-else:
-    # OPTIONAL SAFETY GUARD
-    if not end_date_obj:
-        raise RuntimeError("Unexpected state: end_date_obj is None while till-now is False")
-    end_dt_ist = IST.localize(datetime.combine(end_date_obj, time.max))
-
-end_dt_utc = end_dt_ist.astimezone(UTC)
-
-print(
-    f"[INFO] Effective report range | "
-    f"IST: {start_dt_ist} → {end_dt_ist} | "
-    f"UTC: {start_dt_utc} → {end_dt_utc}"
+start_str, end_str = build_ist_range(
+    START_DATE,
+    END_DATE,
+    args.till_now
 )
+
+print(f"[INFO] Effective report range IST: {start_str} → {end_str}")
 
 # ==========================
 # DYNAMIC JQL (FROM UI)
 # ==========================
-# JQL = f'''
-# project = Operations
-# AND issuetype in (Bug, Task)
-# AND created >= "{START_DATE}"
-# AND created <= "{END_DATE}"
-# {status_clause}
-# ORDER BY created DESC
-# '''
 
 status_clause = ""
 
@@ -115,8 +95,8 @@ if VALID_STATUSES:
 JQL = f'''
 project = Operations
 AND issuetype in (Bug, Task)
-AND created >= "{start_dt_utc.strftime('%Y-%m-%d %H:%M')}"
-AND created <= "{end_dt_utc.strftime('%Y-%m-%d %H:%M')}"
+AND created >= "{start_str}"
+AND created <= "{end_str}"
 {status_clause}
 ORDER BY created DESC
 '''
@@ -186,15 +166,7 @@ def get_value(field):
 def to_ist_datetime(date_str):
     if not date_str:
         return None
-
-    dt = date_parser.parse(date_str)
-
-    # If timezone is missing, assume UTC
-    if dt.tzinfo is None:
-        dt = pytz.utc.localize(dt)
-
-    # Convert to IST only if not already IST
-    return dt.astimezone(IST).strftime("%Y-%m-%d %H:%M:%S")
+    return date_parser.parse(date_str).strftime("%Y-%m-%d %H:%M:%S")
 
 # ==========================
 # FETCH DATA
@@ -284,6 +256,7 @@ try:
 
         start_at += len(issues)
         update_progress(start_at, total_issues)
+        print(f"[INFO] JQL returned {total_issues} issues")
 
     # ==========================
     # SAVE CSV

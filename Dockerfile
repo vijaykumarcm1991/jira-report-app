@@ -1,5 +1,15 @@
 FROM python:3.11-slim
 
+# --------------------------------------------------
+# Set container timezone to IST
+# --------------------------------------------------
+ENV TZ=Asia/Kolkata
+RUN ln -snf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime \
+    && echo Asia/Kolkata > /etc/timezone
+
+# --------------------------------------------------
+# App setup (unchanged)
+# --------------------------------------------------
 WORKDIR /app
 
 COPY requirements.txt .
