@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Jira Report Generator</title>
+
+    <!-- Bootstrap 5 -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa, #e4e8ec);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont;
+        }
+        .card {
+            border-radius: 16px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+            border: none;
+        }
+        .logo {
+            max-height: 54px;
+        }
+        .footer-text {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        .badge {
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card p-4">
+
+                <!-- LOGO -->
+                <div class="text-center mb-3">
+                    <img src="/static/images/onmobile-logo.png" class="logo">
+                </div>
+
+                <div class="text-center mb-4">
+                    <h4 class="fw-bold">Jira Report Generator</h4>
+                    <p class="text-muted mb-0">Generate & download Jira reports instantly</p>
+                </div>
+
+                <!-- TABS -->
+                <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active"
+                                id="generate-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#generateTab"
+                                type="button"
+                                role="tab">
+                            Generate Report
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link"
+                                id="history-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#historyTab"
+                                type="button"
+                                role="tab">
+                            Job History
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+
+                    <!-- ================= GENERATE TAB ================= -->
+                    <div class="tab-pane fade show active"
+                         id="generateTab"
+                         role="tabpanel"
+                         aria-labelledby="generate-tab">
+
+                        <form id="reportForm">
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Report Type</label>
+                                <select name="report_type" class="form-select" required>
+                                    <option value="jira_infosol">JIRA-INFOSOL-Report</option>
+                                    <option value="jira_ops">JIRA-OPS-Task-Bug-Report</option>
+                                    <option value="jira_ops_cr">JIRA-OPS-CR-Report</option>
+                                    <option value="jira_asd_incident">JIRA-ASD-INCIDENT-Report</option>
+                                    <option value="jira_asd_pm">JIRA-ASD-PM-Report</option>
+                                    <option value="jsm_incident">JSM-INCIDENT-Report</option>
+                                </select>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Start Date</label>
+                                    <input type="date" name="start_date" class="form-control" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">End Date</label>
+                                    <input type="date" name="end_date" class="form-control" required>
+                                </div>
+                            </div>
+
+                            <div class="d-grid mt-3">
+                                <button id="submitBtn" type="submit" class="btn btn-primary btn-lg">
+                                    Generate & Download CSV
+                                </button>
+                                <button id="cancelBtn" type="button"
+                                        class="btn btn-outline-danger mt-2 d-none">
+                                    Cancel Job
+                                </button>
+                            </div>
+
+                            <!-- Progress -->
+                            <div class="progress mt-3 d-none" id="progressBox" style="height:22px">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                     id="progressBar" style="width:0%">0%</div>
+                            </div>
+                            <div class="text-center mt-2 fw-semibold" id="progressText"></div>
+                        </form>
+                    </div>
+
+                    <!-- ================= HISTORY TAB ================= -->
+                    <div class="tab-pane fade"
+                         id="historyTab"
+                         role="tabpanel"
+                         aria-labelledby="history-tab">
+
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="fw-bold mb-3">Job History</h6>
+
+                                <div class="table-responsive" style="max-height: 60vh;">
+                                    <table class="table table-sm table-striped align-middle">
+                                        <thead class="table-light sticky-top">
+                                            <tr>
+                                                <th>Report</th>
+                                                <th>Status</th>
+                                                <th>Rows</th>
+                                                <th>Started (IST)</th>
+                                                <th>Ended (IST)</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="historyTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="text-center mt-4 footer-text">
+                    © OnMobile • Jira Reporting Tool
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+const form = document.getElementById("reportForm");
+const btn = document.getElementById("submitBtn");
+const bar = document.getElementById("progressBar");
+const box = document.getElementById("progressBox");
+const text = document.getElementById("progressText");
+const cancelBtn = document.getElementById("cancelBtn");
+let currentJobId = null;
+
+function toIST(utc) {
+    if (!utc) return "";
+    return new Date(utc).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+}
+
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    btn.disabled = true;
+    btn.innerText = "Starting job…";
+
+    const res = await fetch("/start-job", {
+        method: "POST",
+        body: new FormData(form)
+    });
+
+    const { job_id } = await res.json();
+    currentJobId = job_id;
+    cancelBtn.classList.remove("d-none");
+
+    poll(job_id);
+});
+
+async function poll(jobId) {
+    const res = await fetch(`/job-status/${jobId}`);
+    const data = await res.json();
+
+    if (data.total && data.total > 0) {
+        box.classList.remove("d-none");
+        const percent = Math.floor((data.completed / data.total) * 100);
+        bar.style.width = percent + "%";
+        bar.innerText = percent + "%";
+        text.innerText = `Fetched ${data.completed} / ${data.total} rows`;
+    }
+
+    if (["completed","failed","cancelled"].includes(data.status)) {
+        if (data.status === "completed") {
+            window.location = `/download/${jobId}`;
+        }
+        resetUI();
+        switchToHistoryTab();
+        loadHistory();
+        return;
+    }
+
+    setTimeout(() => poll(jobId), 1000);
+}
+
+async function loadHistory() {
+    const res = await fetch("/job-history");
+    const jobs = await res.json();
+    const table = document.getElementById("historyTable");
+    table.innerHTML = "";
+
+    jobs.forEach(job => {
+        let badge = `<span class="badge bg-secondary">${job.status}</span>`;
+        let action = "";
+
+        if (job.status === "completed") {
+            badge = `<span class="badge bg-success">Completed</span>`;
+            action = `<a href="/download/${job.job_id}"
+                        class="btn btn-sm btn-success">Download</a>`;
+        }
+        if (job.status === "failed") {
+            badge = `<span class="badge bg-danger">Failed</span>`;
+        }
+        if (job.status === "cancelled") {
+            badge = `<span class="badge bg-warning text-dark">Cancelled</span>`;
+        }
+        if (job.status === "running") {
+            badge = `<span class="badge bg-primary">Running</span>`;
+        }
+
+        table.innerHTML += `
+            <tr>
+                <td>${job.report_name}</td>
+                <td>${badge}</td>
+                <td>${job.rows}</td>
+                <td>${toIST(job.start_time)}</td>
+                <td>${toIST(job.end_time)}</td>
+                <td>${action}</td>
+            </tr>
+        `;
+    });
+}
+
+function resetUI() {
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerText = "Generate & Download CSV";
+        cancelBtn.classList.add("d-none");
+        box.classList.add("d-none");
+        bar.style.width = "0%";
+        bar.innerText = "0%";
+        text.innerText = "";
+        currentJobId = null;
+    }, 2000);
+}
+
+function switchToHistoryTab() {
+    const tab = new bootstrap.Tab(
+        document.getElementById("history-tab")
+    );
+    tab.show();
+}
+
+cancelBtn.addEventListener("click", async () => {
+    if (!currentJobId) return;
+    await fetch(`/cancel-job/${currentJobId}`, { method: "POST" });
+    resetUI();
+    loadHistory();
+});
+
+// Load history only when tab is opened
+document.getElementById("history-tab")
+    .addEventListener("shown.bs.tab", loadHistory);
+</script>
+
+</body>
+</html>
