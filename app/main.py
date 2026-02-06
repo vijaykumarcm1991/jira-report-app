@@ -5,6 +5,9 @@ from starlette.requests import Request
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime
 from typing import List, Optional
+from app.scheduler import scheduler, load_schedules, start_scheduler
+from uuid import uuid4
+from app.db import insert_schedule, fetch_schedules, toggle_schedule
 import subprocess
 import uuid
 import os
@@ -76,6 +79,10 @@ def cleanup_tmp_files():
             except Exception as e:
                 print(f"⚠️ Failed to delete {fpath}: {e}")
 
+@app.on_event("startup")
+def startup_event():
+    start_scheduler()
+
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -119,14 +126,6 @@ def start_job(
         "filename": config["filename"]
     })
 
-    # process = subprocess.Popen([
-    #     "python", config["script"],
-    #     "--start-date", start_date,
-    #     "--end-date", end_date,
-    #     "--output", output_file,
-    #     "--job-id", job_id
-    # ])
-
     cmd = [
         "python", config["script"],
         "--start-date", start_date,
@@ -145,9 +144,6 @@ def start_job(
     if statuses:
         cmd.extend(["--statuses", ",".join(statuses)])
     
-    # if till_now:
-    #     cmd.extend(["--till-now", "true"])
-
     process = subprocess.Popen(cmd)
 
     JOB_PROCESSES[job_id] = process.pid
@@ -228,3 +224,60 @@ def cancel_job(job_id: str):
 @app.get("/job-history")
 def job_history():
     return JOB_HISTORY[::-1]  # latest job first
+
+@app.post("/schedule-job")
+def create_schedule(
+    report_type: str = Form(...),
+    start_date: str = Form(...),
+    end_date: str = Form(...),
+    statuses: str = Form(None),
+    till_now: bool = Form(False),
+    range_days: int = Form(...),
+    schedule_type: str = Form(...),
+    schedule_value: str = Form(None),
+    email_to: str = Form(...),
+    run_time: str = Form(...)
+):
+    schedule_id = str(uuid4())
+
+    insert_schedule(
+        schedule_id,
+        report_type,
+        statuses,
+        start_date,
+        end_date,
+        int(till_now),
+        schedule_type,
+        schedule_value,
+        run_time,
+        range_days,
+        email_to,
+        1
+    )
+
+    load_schedules()
+
+    return {"status": "ok", "schedule_id": schedule_id}
+
+@app.get("/schedules")
+def list_schedules():
+    rows = fetch_schedules()
+    return [
+        {
+            "id": r[0],
+            "report_type": r[1],
+            "statuses": r[2],
+            "start_date": r[3],
+            "end_date": r[4],
+            "till_now": bool(r[5]),
+            "enabled": bool(r[6]),
+        }
+        for r in rows
+    ]
+
+@app.post("/schedule/{schedule_id}/toggle")
+def toggle(schedule_id: str, enabled: bool = Form(...)):
+    toggle_schedule(schedule_id, int(enabled))
+    load_schedules()
+    return {"status": "ok"}
+

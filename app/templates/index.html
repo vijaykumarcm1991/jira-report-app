@@ -75,6 +75,16 @@
                             Job History
                         </button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link"
+                                id="scheduler-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#schedulerTab"
+                                type="button"
+                                role="tab">
+                            Report Scheduler
+                        </button>
+                    </li>
                 </ul>
 
                 <div class="tab-content">
@@ -89,7 +99,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Report Type</label>
-                                <select name="report_type" class="form-select" required>
+                                <select id="reportType" name="report_type" class="form-select" required>
                                     <option value="jira_infosol">JIRA-INFOSOL-Report</option>
                                     <option value="jira_ops">JIRA-OPS-Task-Bug-Report</option>
                                     <option value="jira_ops_cr">JIRA-OPS-CR-Report</option>
@@ -190,6 +200,165 @@
                         </div>
 
                     </div>
+                    
+                    <!-- ================= SCHEDULER TAB ================= -->
+                    <div class="tab-pane fade"
+                        id="schedulerTab"
+                        role="tabpanel"
+                        aria-labelledby="scheduler-tab">
+
+                        <h5 class="mt-3">Create Schedule</h5>
+
+                        <form id="schedulerForm" class="row g-3">
+
+                            <div class="col-md-4">
+                                <label class="form-label">Report Type</label>
+                                <select class="form-select"
+                                        id="schedReportType"
+                                        name="report_type"
+                                        required>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Schedule Type</label>
+                                <select class="form-select"
+                                        id="schedType"
+                                        name="schedule_type"
+                                        required>
+                                    <option value="once">Once</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Statuses</label>
+                                <select class="form-select"
+                                        id="schedStatuses"
+                                        name="statuses"
+                                        multiple>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label">Start Date</label>
+                                <input type="date"
+                                    class="form-control"
+                                    id="schedStartDate"
+                                    name="start_date"
+                                    required>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label">End Date</label>
+                                <input type="date"
+                                    class="form-control"
+                                    id="schedEndDate"
+                                    name="end_date"
+                                    required>
+                            </div>
+
+                            <div class="col-md-2">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input"
+                                        type="checkbox"
+                                        id="schedTillNow"
+                                        name="till_now">
+                                    <label class="form-check-label">Till now</label>
+                                </div>
+                            </div>
+
+                            <!-- Once -->
+                            <div class="col-md-3" id="onceField">
+                                <label class="form-label">Run Date</label>
+                                <input type="date"
+                                    class="form-control"
+                                    id="schedDate"
+                                    name="schedule_value">
+                            </div>       
+                            
+                            <!-- Weekly -->
+                            <div class="col-md-3" id="weeklyField" style="display:none">
+                                <label class="form-label">Weekday</label>
+                                <select class="form-select"
+                                        id="schedWeekday"
+                                        name="schedule_value">
+                                    <option value="mon">Monday</option>
+                                    <option value="tue">Tuesday</option>
+                                    <option value="wed">Wednesday</option>
+                                    <option value="thu">Thursday</option>
+                                    <option value="fri">Friday</option>
+                                    <option value="sat">Saturday</option>
+                                    <option value="sun">Sunday</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Monthly -->
+                            <div class="col-md-3" id="monthlyField" style="display:none">
+                                <label class="form-label">Day of Month</label>
+                                <input type="number"
+                                    min="1" max="31"
+                                    class="form-control"
+                                    id="schedDay"
+                                    name="schedule_value">
+                            </div>
+
+                            <!-- Run Time -->
+                            <div class="col-md-2">
+                                <label class="form-label">Run Time</label>
+                                <input type="time"
+                                    class="form-control"
+                                    id="schedTime"
+                                    name="run_time"
+                                    required>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label">Last N days</label>
+                                <input type="number"
+                                    min="1"
+                                    class="form-control"
+                                    id="schedRangeDays"
+                                    name="range_days">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Email</label>
+                                <input type="email"
+                                    class="form-control"
+                                    id="schedEmail"
+                                    name="email_to"
+                                    placeholder="user@example.com"
+                                    required>
+                            </div>
+
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-primary">
+                                    Create Schedule
+                                </button>
+                            </div>
+
+                        </form>
+
+                        <hr>
+
+                        <h5>Existing Schedules</h5>
+                        <table class="table table-sm" id="scheduleTable">
+                            <thead>
+                            <tr>
+                                <th>Report</th>
+                                <th>Dates</th>
+                                <th>Status</th>
+                                <th>Enabled</th>
+                                <th>Action</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+
+                    </div>
                 </div>
 
                 <div class="text-center mt-4 footer-text">
@@ -235,9 +404,7 @@ const REPORT_STATUSES = {
     ]
 };
 
-const reportSelect = document.querySelector(
-    'select[name="report_type"]'
-);
+const reportSelect = document.getElementById("reportType");
 const statusSelect = document.getElementById("statusSelect");
 
 function updateStatusOptions() {
@@ -381,6 +548,208 @@ tillNowCheckbox.addEventListener("change", () => {
 // Load history only when tab is opened
 document.getElementById("history-tab")
     .addEventListener("shown.bs.tab", loadHistory);
+
+/* ================= SCHEDULER JS (ADDITIVE ONLY) ================= */
+
+// Schedule type toggle logic
+const schedType = document.getElementById("schedType");
+const onceField = document.getElementById("onceField");
+const weeklyField = document.getElementById("weeklyField");
+const monthlyField = document.getElementById("monthlyField");
+
+function updateScheduleTypeUI() {
+    onceField.style.display = "none";
+    weeklyField.style.display = "none";
+    monthlyField.style.display = "none";
+
+    if (schedType.value === "once") {
+        onceField.style.display = "block";
+    }
+    if (schedType.value === "weekly") {
+        weeklyField.style.display = "block";
+    }
+    if (schedType.value === "monthly") {
+        monthlyField.style.display = "block";
+    }
+}
+
+schedType.addEventListener("change", updateScheduleTypeUI);
+
+function initSchedulerUI() {
+    const schedSelect = document.getElementById("schedReportType");
+
+    // 🔁 Clone options from Generate Report dropdown
+    const generateSelect = document.getElementById("reportType");
+
+    generateSelect.querySelectorAll("option").forEach(opt => {
+        const cloned = opt.cloneNode(true);
+        schedSelect.appendChild(cloned);
+    });
+
+    schedSelect.addEventListener("change", updateSchedStatuses);
+    updateSchedStatuses();
+}
+
+function updateSchedStatuses() {
+    const report = document.getElementById("schedReportType").value;
+    const statusSelect = document.getElementById("schedStatuses");
+    statusSelect.innerHTML = "";
+
+    (REPORT_STATUSES[report] || []).forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s;
+        opt.textContent = s;
+        opt.selected = true; // default select all
+        statusSelect.appendChild(opt);
+    });
+}
+
+// Till-now disables end date (scheduler only)
+const schedTillNow = document.getElementById("schedTillNow");
+const schedEndDate = document.getElementById("schedEndDate");
+// 🔵 FIX-1: "Last N days" overrides start/end/till-now (scheduler only)
+const schedRangeDays = document.getElementById("schedRangeDays");
+const schedStartDate = document.getElementById("schedStartDate");
+// 🔵 FIX 3: Declare scheduler DOM elements (REQUIRED)
+const schedReportType = document.getElementById("schedReportType");
+const schedStatuses = document.getElementById("schedStatuses");
+const schedTime = document.getElementById("schedTime");
+const schedEmail = document.getElementById("schedEmail");
+const schedDate = document.getElementById("schedDate");
+const schedWeekday = document.getElementById("schedWeekday");
+const schedDay = document.getElementById("schedDay");
+
+function updateRangeDaysUI() {
+    const hasRangeDays =
+        schedRangeDays.value &&
+        parseInt(schedRangeDays.value, 10) > 0;
+
+    schedStartDate.disabled = hasRangeDays;
+    schedEndDate.disabled = hasRangeDays;
+    schedTillNow.disabled = hasRangeDays;
+
+    if (hasRangeDays) {
+        // 🔵 Last N days = past days only (NOT till now)
+        schedTillNow.checked = false;
+        schedStartDate.value = "";
+        schedEndDate.value = ""; 
+    }
+}
+
+// react immediately when user types
+schedRangeDays.addEventListener("input", updateRangeDaysUI);
+
+
+schedTillNow.addEventListener("change", () => {
+    schedEndDate.disabled = schedTillNow.checked;
+});
+
+// Submit scheduler form
+
+document.getElementById("schedulerForm").addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const fd = new FormData();
+
+    // always-required
+    fd.append("report_type", schedReportType.value);
+    // fd.append("start_date", schedStartDate.value);
+    if (schedRangeDays.value && parseInt(schedRangeDays.value, 10) > 0) {
+        // dummy value – backend will override
+        fd.append("start_date", new Date().toISOString().slice(0, 10));
+    } else {
+        fd.append("start_date", schedStartDate.value);
+    }
+    // 🔵 end_date is REQUIRED by backend
+    if (schedRangeDays.value && parseInt(schedRangeDays.value, 10) > 0) {
+        // Last N days → dummy end_date (will be ignored)
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        fd.append("end_date", yesterday.toISOString().slice(0, 10));
+    }
+    else if (schedTillNow.checked) {
+        fd.append("end_date", new Date().toISOString().slice(0, 10));
+    }
+    else {
+        fd.append("end_date", schedEndDate.value);
+    }
+
+    fd.append("statuses",
+        [...schedStatuses.selectedOptions].map(o => o.value).join(",")
+    );
+    fd.append("till_now", schedTillNow.checked);
+    fd.append("schedule_type", schedType.value);
+    fd.append("run_time", schedTime.value);
+    fd.append("range_days", schedRangeDays.value);
+    fd.append("email_to", schedEmail.value);
+
+    // conditional schedule_value
+    if (schedType.value === "once") {
+        fd.append("schedule_value", schedDate.value);
+    }
+    if (schedType.value === "weekly") {
+        fd.append("schedule_value", schedWeekday.value);
+    }
+    if (schedType.value === "monthly") {
+        fd.append("schedule_value", schedDay.value);
+    }
+
+    const res = await fetch("/schedule-job", {
+        method: "POST",
+        body: fd
+    });
+
+    if (!res.ok) {
+        const err = await res.text();
+        alert("Failed to create schedule:\n" + err);
+        return;
+    }
+
+    alert("Schedule created successfully");
+    loadSchedules();
+});
+
+async function loadSchedules() {
+    const res = await fetch("/schedules");
+    const data = await res.json();
+
+    const tbody = document.querySelector("#scheduleTable tbody");
+    tbody.innerHTML = "";
+
+    data.forEach(s => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${s.report_type}</td>
+            <td>
+            ${s.range_days ? `Last ${s.range_days} days` : `${s.start_date} → ${s.end_date}`}
+            </td>
+            <td>${s.statuses || "-"}</td>
+            <td>${s.enabled ? "Yes" : "No"}</td>
+            <td>
+                <button class="btn btn-sm btn-secondary"
+                        onclick="toggleSchedule('${s.id}', ${s.enabled ? 0 : 1})">
+                    ${s.enabled ? "Disable" : "Enable"}
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function toggleSchedule(id, enabled) {
+    const fd = new FormData();
+    fd.append("enabled", enabled);
+    await fetch(`/schedule/${id}/toggle`, { method: "POST", body: fd });
+    loadSchedules();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    initSchedulerUI();
+    updateScheduleTypeUI();
+    updateRangeDaysUI();
+    loadSchedules();
+});
+
 </script>
 
 </body>
