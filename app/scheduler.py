@@ -41,11 +41,23 @@ def run_scheduled_job(
     now = datetime.now()
 
     # 🔥 Scheduler uses LAST N DAYS
-    if range_days and range_days > 0:
-        # Last N days = completed past days only
-        start_date = (now - timedelta(days=range_days)).strftime("%Y-%m-%d")
+    # if range_days and range_days > 0:
+    #     # Last N days = completed past days only
+    #     start_date = (now - timedelta(days=range_days)).strftime("%Y-%m-%d")
+    #     end_date = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+    #     till_now = False
+    
+    # 🔵 MODE A: Rolling window (Last N days)
+    if range_days is not None and int(range_days) > 0:
+        start_date = (now - timedelta(days=int(range_days))).strftime("%Y-%m-%d")
         end_date = (now - timedelta(days=1)).strftime("%Y-%m-%d")
         till_now = False
+
+    # 🔵 MODE B: Absolute date range
+    else:
+        # start_date and end_date come from DB as-is
+        # till_now respected as provided
+        pass
 
     report_name = REPORT_DISPLAY_NAMES.get(report_type, report_type)
     safe_report_name = report_name.replace(" ", "_")

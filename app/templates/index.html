@@ -680,7 +680,12 @@ document.getElementById("schedulerForm").addEventListener("submit", async e => {
     fd.append("till_now", schedTillNow.checked);
     fd.append("schedule_type", schedType.value);
     fd.append("run_time", schedTime.value);
+//  fd.append("range_days", schedRangeDays.value);
+    if (schedRangeDays.value && parseInt(schedRangeDays.value, 10) > 0) {
     fd.append("range_days", schedRangeDays.value);
+    } else {
+        fd.append("range_days", 0);
+    }
     fd.append("email_to", schedEmail.value);
 
     // conditional schedule_value
